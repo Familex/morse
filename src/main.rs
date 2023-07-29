@@ -1,6 +1,6 @@
 pub mod morse;
-use std::collections::HashMap;
 use enigo::Key;
+use std::{collections::HashMap, time::Duration};
 
 fn main() {
     // test config
@@ -41,7 +41,7 @@ fn main() {
             let mut functional = Vec::new();
             functional.push(morse::ConfigKeySerde {
                 sequence: "---.-".to_string(),
-                lower: Key::Space, 
+                lower: Key::Space,
                 upper: None,
             });
             functional.push(morse::ConfigKeySerde {
@@ -56,15 +56,22 @@ fn main() {
             });
             functional
         },
-        main_key: "space".to_string(),
-        exit_key: "backspace".to_string(),
-        pause_key: "enter".to_string(),
-        change_lang_key: "ctrl".to_string(),
-        change_case_key: "shift".to_string(),
-        time_erase_ms: 1000,
-        time_to_long_press_ms: 1000,
+        main: Key::Space,
+        exit: Key::Backspace,
+        pause: Key::Accept,
+        change_lang: Key::Control,
+        change_case: Key::Shift,
+        time_erase: Duration::from_millis(1000),
+        time_to_long_press: Duration::from_millis(1000),
     };
 
     let config_ser = toml::to_string_pretty(&config).unwrap();
     std::fs::write("config.toml", config_ser).unwrap();
+
+    // test config
+    let config = std::fs::read("config.toml").unwrap();
+    let config = std::str::from_utf8(&config).unwrap();
+    let config: morse::ConfigSerde = toml::from_str(config).unwrap();
+    let config: morse::Config = config.try_into().unwrap();
+    dbg!(config);
 }

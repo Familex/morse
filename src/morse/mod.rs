@@ -1,12 +1,14 @@
 use enigo::keycodes::Key;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MorseKey {
     Dot,
     Slash,
 }
+
+pub type MorseSequence = Vec<MorseKey>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigKeySerde {
@@ -19,31 +21,33 @@ pub struct ConfigKeySerde {
 pub struct ConfigSerde {
     pub langs: HashMap<String, Vec<ConfigKeySerde>>,
     pub functional: Vec<ConfigKeySerde>,
-    pub main_key: String,
-    pub exit_key: String,
-    pub pause_key: String,
-    pub change_lang_key: String,
-    pub change_case_key: String,
-    pub time_erase_ms: u32,
-    pub time_to_long_press_ms: u32,
+    pub main: Key,
+    pub exit: Key,
+    pub pause: Key,
+    pub change_lang: Key,
+    pub change_case: Key,
+    pub time_erase: Duration,
+    pub time_to_long_press: Duration,
 }
 
+#[derive(Debug)]
 pub struct ConfigKey {
-    pub sequence: Vec<MorseKey>,
+    pub sequence: MorseSequence,
     pub lower: Key,
     pub upper: Option<Key>,
 }
 
+#[derive(Debug)]
 pub struct Config {
-    pub langs: HashMap<String, HashMap<Key, ConfigKey>>,
-    pub functional: HashMap<Key, ConfigKey>,
-    pub main_key: String,
-    pub exit_key: String,
-    pub pause_key: String,
-    pub change_lang_key: String,
-    pub change_case_key: String,
-    pub time_erase_ms: u32,
-    pub time_to_long_press_ms: u32,
+    pub langs: HashMap<String, HashMap<MorseSequence, ConfigKey>>,
+    pub functional: HashMap<MorseSequence, ConfigKey>,
+    pub main: Key,
+    pub exit: Key,
+    pub pause: Key,
+    pub change_lang: Key,
+    pub change_case: Key,
+    pub time_erase: Duration,
+    pub time_to_long_press: Duration,
 }
 
 impl TryFrom<ConfigKeySerde> for ConfigKey {
@@ -73,24 +77,26 @@ impl TryInto<Config> for ConfigSerde {
         for (lang, keys) in self.langs {
             let mut keys_map = HashMap::new();
             for key_serde in keys {
-                keys_map.insert(key_serde.lower.clone(), key_serde.try_into()?);
+                let key: ConfigKey = key_serde.try_into()?;
+                keys_map.insert(key.sequence.clone(), key);
             }
             langs.insert(lang, keys_map);
         }
         let mut functional = HashMap::new();
         for key_serde in self.functional {
-            functional.insert(key_serde.lower.clone(), key_serde.try_into()?);
+            let key: ConfigKey = key_serde.try_into()?;
+            functional.insert(key.sequence.clone(), key);
         }
         Ok(Config {
             langs,
             functional,
-            main_key: self.main_key,
-            exit_key: self.exit_key,
-            pause_key: self.pause_key,
-            change_lang_key: self.change_lang_key,
-            change_case_key: self.change_case_key,
-            time_erase_ms: self.time_erase_ms,
-            time_to_long_press_ms: self.time_to_long_press_ms,
+            main: self.main,
+            exit: self.exit,
+            pause: self.pause,
+            change_lang: self.change_lang,
+            change_case: self.change_case,
+            time_erase: self.time_erase,
+            time_to_long_press: self.time_to_long_press,
         })
     }
 }
