@@ -1,0 +1,55 @@
+main_key = "space"
+exit_key = "backspace"
+pause_key = "enter"
+change_lang_key = "ctrl"
+change_case_key = "shift"
+time_erase_ms = 1000
+time_to_long_press_ms = 1000
+
+[[langs.ru]]
+sequence = ".-"
+
+[langs.ru.lower]
+Layout = "а"
+
+[langs.ru.upper]
+Layout = "А"
+
+[[langs.ru]]
+sequence = "-..."
+
+[langs.ru.lower]
+Layout = "б"
+
+[langs.ru.upper]
+Layout = "Б"
+
+[[langs.en]]
+sequence = ".-"
+
+[langs.en.lower]
+Layout = "a"
+
+[langs.en.upper]
+Layout = "A"
+
+[[langs.en]]
+sequence = "-..."
+
+[langs.en.lower]
+Layout = "b"
+
+[langs.en.upper]
+Layout = "B"
+
+[[functional]]
+sequence = "---.-"
+lower = "Space"
+
+[[functional]]
+sequence = ".-.--"
+lower = "Backspace"
+
+[[functional]]
+sequence = ".---.-"
+lower = "Accept"
