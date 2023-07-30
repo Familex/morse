@@ -439,9 +439,7 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::DBENoRoman => VK_DBE_NOROMAN,
         Key::DBERoman => VK_DBE_ROMAN,
         Key::DBESBCSChar => VK_DBE_SBCSCHAR,
-        Key::DBESChar => {
-            unimplemented!();
-        }
+        Key::DBESChar => unimplemented!(),
         Key::Decimal => VK_DECIMAL,
         Key::Delete => VK_DELETE,
         Key::Divide => VK_DIVIDE,
@@ -542,9 +540,9 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::NavigationRight => VK_NAVIGATION_RIGHT,
         Key::NavigationUp => VK_NAVIGATION_UP,
         Key::NavigationView => VK_NAVIGATION_VIEW,
-        Key::NoName => unimplemented!(),
+        Key::NoName => VK_NONAME,
         Key::NonConvert => VK_NONCONVERT,
-        Key::None => unimplemented!(),
+        Key::None => VK__none_,
         Key::Numlock => VK_NUMLOCK,
         Key::Numpad0 => VK_NUMPAD0,
         Key::Numpad1 => VK_NUMPAD1,
@@ -622,7 +620,20 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::XButton1 => VK_XBUTTON1,
         Key::XButton2 => VK_XBUTTON2,
         Key::Zoom => VK_ZOOM,
-        Key::Layout(_character) => unimplemented!(),
+        Key::Layout(character) => {
+            let base = if character >= 'A' && character <= 'Z' {
+                Some('A' as u16)
+            } else if character >= 'a' && character <= 'z' {
+                Some('a' as u16)
+            } else {
+                None
+            };
+            if base.is_some() {
+                VIRTUAL_KEY(VK_A.0 + (character as u16 - base.unwrap()))
+            } else {
+                unimplemented!()
+            }
+        }
         Key::Raw(_) => unimplemented!(),
         _ => unimplemented!(),
     }
