@@ -180,61 +180,72 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
 
     while state.work_state != InputWorkState::Exit {
         // handle main key press
-        if let Some(main_key_hold_duration) = key_hold_duration(config.main, state.main_key_state) {
-            let morse_key = if main_key_hold_duration < config.time_to_long_press {
-                MorseKey::Dot
-            } else {
-                MorseKey::Dash
-            };
-            state.sequence.push(morse_key);
-            state.last_main_key_press = Some(SystemTime::now());
+        if state.work_state == InputWorkState::Work {
+            if let Some(main_key_hold_duration) =
+                key_hold_duration(config.main, state.main_key_state)
+            {
+                let morse_key = if main_key_hold_duration < config.time_to_long_press {
+                    MorseKey::Dot
+                } else {
+                    MorseKey::Dash
+                };
+                state.sequence.push(morse_key);
+                state.last_main_key_press = Some(SystemTime::now());
 
-            event_handler(InputEvent::MorseKey(morse_key), &mut state);
+                event_handler(InputEvent::MorseKey(morse_key), &mut state);
+            }
         }
 
         // handle other keys
         {
-            if let Some(_) = key_hold_duration(config.change_lang, state.lang_key_state) {
-                // if lang is None, then config not contains any lang
-                if state.lang.is_some() {
-                    // cyclically find next lang in config.langs HashMap
-                    let curr_lang = state.lang.as_ref().unwrap().clone();
-                    let keys = config.langs.keys().collect::<Vec<_>>();
-                    let curr_lang_iter = keys
-                        .iter()
-                        .position(|s| *s == &curr_lang)
-                        .expect("current lang not found in config.langs");
-                    let next_lang = keys[(curr_lang_iter + 1) % keys.len()].clone();
-                    state.lang = Some(next_lang.clone());
+            if state.work_state == InputWorkState::Work {
+                if let Some(_) = key_hold_duration(config.change_lang, state.lang_key_state) {
+                    // if lang is None, then config not contains any lang
+                    if state.lang.is_some() {
+                        // cyclically find next lang in config.langs HashMap
+                        let curr_lang = state.lang.as_ref().unwrap().clone();
+                        let keys = config.langs.keys().collect::<Vec<_>>();
+                        let curr_lang_iter = keys
+                            .iter()
+                            .position(|s| *s == &curr_lang)
+                            .expect("current lang not found in config.langs");
+                        let next_lang = keys[(curr_lang_iter + 1) % keys.len()].clone();
+                        state.lang = Some(next_lang.clone());
 
-                    event_handler(InputEvent::LangChange { 0: next_lang }, &mut state);
+                        event_handler(InputEvent::LangChange { 0: next_lang }, &mut state);
+                    }
                 }
             }
 
-            if let Some(_) = key_hold_duration(config.change_case, state.change_case_key_state) {
-                state.is_upper_case = !state.is_upper_case;
+            if state.work_state == InputWorkState::Work {
+                if let Some(_) = key_hold_duration(config.change_case, state.change_case_key_state)
+                {
+                    state.is_upper_case = !state.is_upper_case;
 
-                event_handler(
-                    InputEvent::CaseChange {
-                        0: state.is_upper_case,
-                    },
-                    &mut state,
-                );
+                    event_handler(
+                        InputEvent::CaseChange {
+                            0: state.is_upper_case,
+                        },
+                        &mut state,
+                    );
+                }
             }
 
-            if let Some(_) = key_hold_duration(config.pause, state.pause_key_state) {
-                state.work_state = match state.work_state {
-                    InputWorkState::Pause => InputWorkState::Work,
-                    InputWorkState::Work => InputWorkState::Pause,
-                    InputWorkState::Exit => InputWorkState::Exit,
-                };
+            if state.work_state != InputWorkState::Exit {
+                if let Some(_) = key_hold_duration(config.pause, state.pause_key_state) {
+                    state.work_state = match state.work_state {
+                        InputWorkState::Pause => InputWorkState::Work,
+                        InputWorkState::Work => InputWorkState::Pause,
+                        InputWorkState::Exit => InputWorkState::Exit,
+                    };
 
-                event_handler(
-                    InputEvent::PauseToggle {
-                        0: state.work_state == InputWorkState::Pause,
-                    },
-                    &mut state,
-                );
+                    event_handler(
+                        InputEvent::PauseToggle {
+                            0: state.work_state == InputWorkState::Pause,
+                        },
+                        &mut state,
+                    );
+                }
             }
 
             if let Some(_) = key_hold_duration(config.exit, state.exit_key_state) {
@@ -245,46 +256,53 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
         }
 
         // handle morse sequence
-        // main key is up && sequence is not empty && last main key press was long enough ago
-        if let KeyState::NotPressed = state.main_key_state {
-            if let Some(true) = state.last_main_key_press.map(|t| {
-                t.elapsed().unwrap() > config.accept_sequence_delay && !state.sequence.is_empty()
-            }) {
-                match config.langs.get(state.lang.as_ref().unwrap()) {
-                    Some(keys) => {
-                        if let Some(config_key) = keys.get(&state.sequence) {
-                            let curr_config_key = if state.is_upper_case {
-                                config_key.upper.unwrap_or(config_key.lower)
-                            } else {
-                                config_key.lower
-                            };
+        // work_state is work && main key is up && sequence is not empty && last main key press was
+        // long enough ago
+        if state.work_state == InputWorkState::Work {
+            if let KeyState::NotPressed = state.main_key_state {
+                if let Some(true) = state.last_main_key_press.map(|t| {
+                    t.elapsed().unwrap() > config.accept_sequence_delay
+                        && !state.sequence.is_empty()
+                }) {
+                    match config.langs.get(state.lang.as_ref().unwrap()) {
+                        Some(keys) => {
+                            if let Some(config_key) = keys.get(&state.sequence) {
+                                let curr_config_key = if state.is_upper_case {
+                                    config_key.upper.unwrap_or(config_key.lower)
+                                } else {
+                                    config_key.lower
+                                };
 
-                            event_handler(
-                                InputEvent::SequenceParsed(state.sequence.clone(), curr_config_key),
-                                &mut state,
-                            );
-                        } else {
+                                event_handler(
+                                    InputEvent::SequenceParsed(
+                                        state.sequence.clone(),
+                                        curr_config_key,
+                                    ),
+                                    &mut state,
+                                );
+                            } else {
+                                event_handler(
+                                    InputEvent::SeqRejected(
+                                        state.sequence.clone(),
+                                        SequenceRejectReason::InvalidSequence,
+                                    ),
+                                    &mut state,
+                                );
+                            }
+                        }
+                        None => {
                             event_handler(
                                 InputEvent::SeqRejected(
                                     state.sequence.clone(),
-                                    SequenceRejectReason::InvalidSequence,
+                                    SequenceRejectReason::NoLangsLoaded,
                                 ),
                                 &mut state,
                             );
                         }
                     }
-                    None => {
-                        event_handler(
-                            InputEvent::SeqRejected(
-                                state.sequence.clone(),
-                                SequenceRejectReason::NoLangsLoaded,
-                            ),
-                            &mut state,
-                        );
-                    }
+                    state.last_main_key_press = None;
+                    state.sequence.clear();
                 }
-                state.last_main_key_press = None;
-                state.sequence.clear();
             }
         }
 
