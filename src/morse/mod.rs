@@ -8,7 +8,7 @@ pub type KeyCode = enigo::Key;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MorseKey {
     Dot,
-    Slash,
+    Dash,
 }
 
 pub type MorseSequence = Vec<MorseKey>;
@@ -63,7 +63,7 @@ impl TryFrom<ConfigKeySerde> for ConfigKey {
         for c in value.sequence.chars() {
             match c {
                 '.' => sequence.push(MorseKey::Dot),
-                '-' => sequence.push(MorseKey::Slash),
+                '-' => sequence.push(MorseKey::Dash),
                 _ => return Err(()),
             }
         }
@@ -144,12 +144,16 @@ pub enum SequenceRejectReason {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputEvent {
+    MorseKey(MorseKey),
     SequenceParsed(MorseSequence, KeyCode),
     SeqRejected(MorseSequence, SequenceRejectReason),
-    LangChange,
-    CaseChange,
+    /// current lang
+    LangChange(String),
+    /// true - upper case, false - lower case
+    CaseChange(bool),
     Exit,
-    PauseToggle,
+    /// true - pause, false - unpause
+    PauseToggle(bool),
 }
 
 impl InputState {
@@ -177,12 +181,15 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
     while state.work_state != InputWorkState::Exit {
         // handle main key press
         if let Some(main_key_hold_duration) = key_hold_duration(config.main, state.main_key_state) {
-            if main_key_hold_duration < config.time_to_long_press {
-                state.sequence.push(MorseKey::Dot);
+            let morse_key = if main_key_hold_duration < config.time_to_long_press {
+                MorseKey::Dot
             } else {
-                state.sequence.push(MorseKey::Slash);
-            }
+                MorseKey::Dash
+            };
+            state.sequence.push(morse_key);
             state.last_main_key_press = Some(SystemTime::now());
+
+            event_handler(InputEvent::MorseKey(morse_key), &mut state);
         }
 
         // handle other keys
@@ -198,14 +205,21 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                         .position(|s| *s == &curr_lang)
                         .expect("current lang not found in config.langs");
                     let next_lang = keys[(curr_lang_iter + 1) % keys.len()].clone();
-                    state.lang = Some(next_lang);
+                    state.lang = Some(next_lang.clone());
+
+                    event_handler(InputEvent::LangChange { 0: next_lang }, &mut state);
                 }
-                event_handler(InputEvent::LangChange, &mut state);
             }
 
             if let Some(_) = key_hold_duration(config.change_case, state.change_case_key_state) {
                 state.is_upper_case = !state.is_upper_case;
-                event_handler(InputEvent::CaseChange, &mut state);
+
+                event_handler(
+                    InputEvent::CaseChange {
+                        0: state.is_upper_case,
+                    },
+                    &mut state,
+                );
             }
 
             if let Some(_) = key_hold_duration(config.pause, state.pause_key_state) {
@@ -214,11 +228,18 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                     InputWorkState::Work => InputWorkState::Pause,
                     InputWorkState::Exit => InputWorkState::Exit,
                 };
-                event_handler(InputEvent::PauseToggle, &mut state);
+
+                event_handler(
+                    InputEvent::PauseToggle {
+                        0: state.work_state == InputWorkState::Pause,
+                    },
+                    &mut state,
+                );
             }
 
             if let Some(_) = key_hold_duration(config.exit, state.exit_key_state) {
                 state.work_state = InputWorkState::Exit;
+
                 event_handler(InputEvent::Exit, &mut state);
             }
         }
@@ -237,6 +258,7 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                             } else {
                                 config_key.lower
                             };
+
                             event_handler(
                                 InputEvent::SequenceParsed(state.sequence.clone(), curr_config_key),
                                 &mut state,

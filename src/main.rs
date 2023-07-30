@@ -81,6 +81,33 @@ fn main() {
     morse::listen_loop(&config, event_handler);
 }
 
-fn event_handler(event: morse::InputEvent, state: &mut morse::InputState) {
-    println!("event = {:?}; state = {:?}", event, state);
+fn event_handler(event: morse::InputEvent, _state: &mut morse::InputState) {
+    use morse::{InputEvent, MorseKey};
+
+    // let mut enigo = enigo::Enigo::new();
+
+    match event {
+        InputEvent::MorseKey(key) => match key {
+            MorseKey::Dot => println!("Dot input"),
+            MorseKey::Dash => println!("Dash input"),
+        },
+        InputEvent::SequenceParsed(seq, key) => {
+            println!("Sequence parsed: {:?} -> {:?}", seq, key);
+        }
+        InputEvent::SeqRejected(seq, reason) => {
+            println!("Sequence rejected: {:?} -> {:?}", seq, reason);
+        }
+        InputEvent::LangChange(lang) => {
+            println!("Lang changed: {:?}", lang);
+        }
+        InputEvent::CaseChange(is_upper) => {
+            println!("Case changed: {:?}", is_upper);
+        }
+        InputEvent::PauseToggle(is_pause) => {
+            println!("Pause changed: {:?}", is_pause);
+        }
+        InputEvent::Exit => {
+            println!("Exit");
+        }
+    }
 }
