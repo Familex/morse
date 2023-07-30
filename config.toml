@@ -20,181 +20,123 @@ nanos = 750000000
 
 [langs.ru.".-".Layout]
 lower.Layout = "а"
-upper.Layout = "А"
 [langs.ru."-...".Layout]
 lower.Layout = "б"
-upper.Layout = "Б"
 [langs.ru.".--".Layout]
 lower.Layout = "в"
-upper.Layout = "В"
 [langs.ru."--.".Layout]
 lower.Layout = "г"
-upper.Layout = "Г"
 [langs.ru."-..".Layout]
 lower.Layout = "д"
-upper.Layout = "Д"
 [langs.ru.".".Layout]
 lower.Layout = "е"
-upper.Layout = "Е"
 [langs.ru."...-".Layout]
 lower.Layout = "ж"
-upper.Layout = "Ж"
 [langs.ru."--..".Layout]
 lower.Layout = "з"
-upper.Layout = "З"
 [langs.ru."..".Layout]
 lower.Layout = "и"
-upper.Layout = "И"
 [langs.ru.".---".Layout]
 lower.Layout = "й"
-upper.Layout = "Й"
 [langs.ru."-.-".Layout]
 lower.Layout = "к"
-upper.Layout = "К"
 [langs.ru.".-..".Layout]
 lower.Layout = "л"
-upper.Layout = "Л"
 [langs.ru."--".Layout]
 lower.Layout = "м"
-upper.Layout = "М"
 [langs.ru."-.".Layout]
 lower.Layout = "н"
-upper.Layout = "Н"
 [langs.ru."---".Layout]
 lower.Layout = "о"
-upper.Layout = "О"
 [langs.ru.".--.".Layout]
 lower.Layout = "п"
-upper.Layout = "П"
 [langs.ru.".-.".Layout]
 lower.Layout = "р"
-upper.Layout = "Р"
 [langs.ru."...".Layout]
 lower.Layout = "с"
-upper.Layout = "С"
 [langs.ru."-".Layout]
 lower.Layout = "т"
-upper.Layout = "Т"
 [langs.ru."..-".Layout]
 lower.Layout = "у"
-upper.Layout = "У"
 [langs.ru."..-.".Layout]
 lower.Layout = "ф"
-upper.Layout = "Ф"
 [langs.ru."....".Layout]
 lower.Layout = "х"
-upper.Layout = "Х"
 [langs.ru."-.-.".Layout]
 lower.Layout = "ц"
-upper.Layout = "Ц"
 [langs.ru."---.".Layout]
 lower.Layout = "ч"
-upper.Layout = "Ч"
 [langs.ru."----".Layout]
 lower.Layout = "ш"
-upper.Layout = "Ш"
 [langs.ru."--.-".Layout]
 lower.Layout = "щ"
-upper.Layout = "Щ"
 [langs.ru.".--.-.".Layout]
 lower.Layout = "ъ"
-upper.Layout = "Ъ"
 [langs.ru."-.--".Layout]
 lower.Layout = "ы"
-upper.Layout = "Ы"
 [langs.ru."-..-".Layout]
 lower.Layout = "ь"
-upper.Layout = "Ь"
 [langs.ru."...-...".Layout]
 lower.Layout = "э"
-upper.Layout = "Э"
 [langs.ru."..--".Layout]
 lower.Layout = "ю"
-upper.Layout = "Ю"
 [langs.ru.".-.-".Layout]
 lower.Layout = "я"
-upper.Layout = "Я"
 
 # "en" lang
 
 [langs.en.".-".Layout]
 lower.Layout = "a"
-upper.Layout = "A"
 [langs.en."-...".Layout]
 lower.Layout = "b"
-upper.Layout = "B"
 [langs.en."-.-.".Layout]
 lower.Layout = "c"
-upper.Layout = "C"
 [langs.en."-..".Layout]
 lower.Layout = "d"
-upper.Layout = "D"
 [langs.en.".".Layout]
 lower.Layout = "e"
-upper.Layout = "E"
 [langs.en."..-.".Layout]
 lower.Layout = "f"
-upper.Layout = "F"
 [langs.en."--.".Layout]
 lower.Layout = "g"
-upper.Layout = "G"
 [langs.en."....".Layout]
 lower.Layout = "h"
-upper.Layout = "H"
 [langs.en."..".Layout]
 lower.Layout = "i"
-upper.Layout = "I"
 [langs.en.".---".Layout]
 lower.Layout = "j"
-upper.Layout = "J"
 [langs.en."-.-".Layout]
 lower.Layout = "k"
-upper.Layout = "K"
 [langs.en.".-..".Layout]
 lower.Layout = "l"
-upper.Layout = "L"
 [langs.en."--".Layout]
 lower.Layout = "m"
-upper.Layout = "M"
 [langs.en."-.".Layout]
 lower.Layout = "n"
-upper.Layout = "N"
 [langs.en."---".Layout]
 lower.Layout = "o"
-upper.Layout = "O"
 [langs.en.".--.".Layout]
 lower.Layout = "p"
-upper.Layout = "P"
 [langs.en."--.-".Layout]
 lower.Layout = "q"
-upper.Layout = "Q"
 [langs.en.".-.".Layout]
 lower.Layout = "r"
-upper.Layout = "R"
 [langs.en."...".Layout]
 lower.Layout = "s"
-upper.Layout = "S"
 [langs.en."-".Layout]
 lower.Layout = "t"
-upper.Layout = "T"
 [langs.en."..-".Layout]
 lower.Layout = "u"
-upper.Layout = "U"
 [langs.en."...-".Layout]
 lower.Layout = "v"
-upper.Layout = "V"
 [langs.en.".--".Layout]
 lower.Layout = "w"
-upper.Layout = "W"
 [langs.en."-..-".Layout]
 lower.Layout = "x"
-upper.Layout = "X"
 [langs.en."-.--".Layout]
 lower.Layout = "y"
-upper.Layout = "Y"
 [langs.en."--..".Layout]
 lower.Layout = "z"
-upper.Layout = "Z"
 
 # "functional"
 

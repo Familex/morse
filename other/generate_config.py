@@ -44,8 +44,6 @@ if True:
     for keys, val in rus.items():
         print('[langs.ru."{}".Layout]'.format(keys))
         print('lower.Layout = "{}"'.format(val))
-        if val.upper() != val:
-            print('upper.Layout = "{}"'.format(val.upper()))
 
 eng = {
     ".-": "a",
@@ -80,8 +78,6 @@ if True:
     for keys, val in eng.items():
         print('[langs.en."{}".Layout]'.format(keys))
         print('lower.Layout = "{}"'.format(val))
-        if val.upper() != val:
-            print('upper.Layout = "{}"'.format(val.upper()))
 
 
 functional = {
@@ -137,16 +133,11 @@ if True:
             if len(keys) == 1:
                 print('[functional."{}".Layout]'.format(seq))
                 print('lower.Layout = "{}"'.format(keys[0]))
-                if keys[0].upper() != keys[0]:
-                    print('upper.Layout = "{}"'.format(keys[0].upper()))
             else:
                 for key in keys:
                     print('[[functional."{}".Sequence]]'.format(seq))
                     print('[functional."{}".Sequence.lower]'.format(seq))
                     print('Layout = "{}"'.format(key))
-                    if key.upper() != key:
-                        print('[functional."{}".Sequence.upper]'.format(seq))
-                        print('Layout = "{}"'.format(key.upper()))
         else:
             print('[functional."{}"]'.format(seq))
             print('Code = "{}"'.format(keys))

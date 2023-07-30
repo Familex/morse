@@ -13,45 +13,16 @@ pub enum MorseKey {
 
 pub type MorseSequence = Vec<MorseKey>;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ConfigLayoutKey {
     pub lower: KeyCode,
-    pub upper: Option<KeyCode>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ConfigKey {
     Code(KeyCode),
     Layout(ConfigLayoutKey),
     Sequence(Vec<ConfigLayoutKey>),
-}
-
-impl ConfigLayoutKey {
-    fn apply_case(&self, is_upper_case: bool) -> KeyCode {
-        if is_upper_case {
-            self.upper.unwrap_or(self.lower)
-        } else {
-            self.lower
-        }
-    }
-}
-
-impl ConfigKey {
-    fn apply_case(&self, is_upper_case: bool) -> Vec<KeyCode> {
-        match self {
-            ConfigKey::Code(key) => vec![key.clone()],
-            ConfigKey::Layout(layout) => {
-                vec![layout.apply_case(is_upper_case)]
-            }
-            ConfigKey::Sequence(seq) => {
-                let mut keys: Vec<KeyCode> = Vec::new();
-                for key in seq.iter() {
-                    keys.push(key.apply_case(is_upper_case));
-                }
-                keys
-            }
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -104,8 +75,16 @@ impl TryInto<Config> for ConfigSerde {
         let mut langs = HashMap::new();
         for (lang, keys) in self.langs {
             let mut keys_map = HashMap::new();
-            for (seq_serde, key) in keys {
+            for (seq_serde, mut key) in keys {
                 let seq = morse_seq_from_string(&seq_serde).ok_or(())?;
+                if let ConfigKey::Layout(ref mut layout) = key {
+                    if let enigo::Key::Layout(ref mut layout) = layout.lower {
+                        *layout = layout
+                            .to_lowercase()
+                            .next()
+                            .expect("unexpected lowercase layout");
+                    }
+                }
                 keys_map.insert(seq, key);
             }
             langs.insert(lang, keys_map);
@@ -165,9 +144,15 @@ pub enum SequenceRejectReason {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct InputEventKey {
+    pub key: ConfigKey,
+    pub is_upper: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputEvent {
     MorseKey(MorseKey),
-    SequenceParsed(MorseSequence, Vec<KeyCode>),
+    SequenceParsed(MorseSequence, InputEventKey),
     SeqRejected(MorseSequence, SequenceRejectReason),
     /// current lang
     LangChange(String),
@@ -290,7 +275,10 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                         event_handler(
                             InputEvent::SequenceParsed(
                                 state.sequence.clone(),
-                                config_key.apply_case(state.is_upper_case),
+                                InputEventKey {
+                                    key: config_key.clone(),
+                                    is_upper: state.is_upper_case,
+                                },
                             ),
                             &mut state,
                         );
@@ -301,7 +289,10 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                                     event_handler(
                                         InputEvent::SequenceParsed(
                                             state.sequence.clone(),
-                                            config_key.apply_case(state.is_upper_case),
+                                            InputEventKey {
+                                                key: config_key.clone(),
+                                                is_upper: state.is_upper_case,
+                                            },
                                         ),
                                         &mut state,
                                     );

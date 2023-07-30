@@ -52,14 +52,38 @@ fn event_handler(event: morse::InputEvent, state: &mut morse::InputState) {
                 }
             }
         }
-        InputEvent::SequenceParsed(seq, keys) => {
-            println!("Sequence parsed: {:?} -> {:?}", seq, keys);
+        InputEvent::SequenceParsed(seq, event_key) => {
+            use morse::ConfigKey;
+
+            println!("Sequence parsed: {:?} -> {:?}", seq, event_key);
             // remove morse keys
             for _ in 0..seq.len() {
                 enigo.key_click(enigo::Key::Backspace);
             }
-            for key in keys.iter() {
-                enigo.key_click(*key); // click parsed key
+            match event_key.key {
+                ConfigKey::Code(code) => {
+                    enigo.key_click(code);
+                }
+                ConfigKey::Layout(layout) => {
+                    if event_key.is_upper {
+                        enigo.key_down(enigo::Key::Shift);
+                        enigo.key_click(layout.lower);
+                        enigo.key_up(enigo::Key::Shift);
+                    } else {
+                        enigo.key_click(layout.lower);
+                    }
+                }
+                ConfigKey::Sequence(seq) => {
+                    for layout in seq {
+                        if event_key.is_upper {
+                            enigo.key_down(enigo::Key::Shift);
+                            enigo.key_click(layout.lower);
+                            enigo.key_up(enigo::Key::Shift);
+                        } else {
+                            enigo.key_click(layout.lower);
+                        }
+                    }
+                }
             }
         }
         InputEvent::SeqRejected(seq, reason) => {
