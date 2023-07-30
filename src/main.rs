@@ -3,7 +3,7 @@ use enigo::KeyboardControllable;
 pub mod morse;
 
 fn main() {
-    let config = std::fs::read("config.toml").unwrap();
+    let config = std::fs::read("other/config.toml").unwrap();
     let config = std::str::from_utf8(&config).unwrap();
     let config = toml::from_str::<morse::ConfigSerde>(config).unwrap();
     let config: morse::Config = config.try_into().unwrap();
