@@ -363,6 +363,12 @@ fn is_key_down(key: enigo::Key) -> bool {
     unsafe { GetAsyncKeyState(key_code_into_virtual_key(key).0 as i32) < 0 }
 }
 
+#[cfg(not(target_os = "windows"))]
+fn is_key_down(key: enigo::Key) -> bool {
+    unimplemented!()
+}
+
+// same as enigo::win::win_impl::key_to_keycode
 #[cfg(target_os = "windows")]
 fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
     use enigo::Key;
@@ -439,7 +445,7 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::DBENoRoman => VK_DBE_NOROMAN,
         Key::DBERoman => VK_DBE_ROMAN,
         Key::DBESBCSChar => VK_DBE_SBCSCHAR,
-        Key::DBESChar => unimplemented!(),
+        Key::DBESChar => VK_DBE_SBCSCHAR,
         Key::Decimal => VK_DECIMAL,
         Key::Delete => VK_DELETE,
         Key::Divide => VK_DIVIDE,
@@ -474,7 +480,6 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::F23 => VK_F23,
         Key::F24 => VK_F24,
         Key::Final => VK_FINAL,
-        // Find => VK_FIND,
         Key::GamepadA => VK_GAMEPAD_A,
         Key::GamepadB => VK_GAMEPAD_B,
         Key::GamepadDPadDown => VK_GAMEPAD_DPAD_DOWN,
@@ -517,7 +522,6 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
         Key::LaunchApp2 => VK_LAUNCH_APP2,
         Key::LaunchMail => VK_LAUNCH_MAIL,
         Key::LaunchMediaSelect => VK_LAUNCH_MEDIA_SELECT,
-        // Launchpad =>
         Key::LButton => VK_LBUTTON,
         Key::LControl => VK_LCONTROL,
         Key::LeftArrow => VK_LEFT,
@@ -634,7 +638,8 @@ fn key_code_into_virtual_key(key_code: enigo::Key) -> VIRTUAL_KEY {
                 unimplemented!()
             }
         }
-        Key::Raw(_) => unimplemented!(),
-        _ => unimplemented!(),
+        Key::Raw(raw_keycode) => VIRTUAL_KEY(raw_keycode),
+        #[allow(deprecated)]
+        Key::Super | Key::Command | Key::Windows => VK_LWIN,
     }
 }

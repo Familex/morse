@@ -10,6 +10,23 @@ fn main() {
     morse::listen_loop(&config, event_handler);
 }
 
+fn key_click(enigo: &mut enigo::Enigo, layout_key: morse::ConfigLayoutKey, is_upper: bool) {
+    if is_upper {
+        enigo.key_down(enigo::Key::Shift);
+    }
+    match layout_key.lower {
+        enigo::Key::Layout(layout) => {
+            enigo.key_sequence(&layout.to_string());
+        }
+        code => {
+            enigo.key_click(code);
+        }
+    }
+    if is_upper {
+        enigo.key_up(enigo::Key::Shift);
+    }
+}
+
 fn event_handler(event: morse::InputEvent, state: &mut morse::InputState) {
     use morse::{InputEvent, MorseKey};
     use std::thread::spawn;
@@ -64,24 +81,10 @@ fn event_handler(event: morse::InputEvent, state: &mut morse::InputState) {
                 ConfigKey::Code(code) => {
                     enigo.key_click(code);
                 }
-                ConfigKey::Layout(layout) => {
-                    if event_key.is_upper {
-                        enigo.key_down(enigo::Key::Shift);
-                        enigo.key_click(layout.lower);
-                        enigo.key_up(enigo::Key::Shift);
-                    } else {
-                        enigo.key_click(layout.lower);
-                    }
-                }
+                ConfigKey::Layout(layout) => key_click(&mut enigo, layout, event_key.is_upper),
                 ConfigKey::Sequence(seq) => {
                     for layout in seq {
-                        if event_key.is_upper {
-                            enigo.key_down(enigo::Key::Shift);
-                            enigo.key_click(layout.lower);
-                            enigo.key_up(enigo::Key::Shift);
-                        } else {
-                            enigo.key_click(layout.lower);
-                        }
+                        key_click(&mut enigo, layout, event_key.is_upper);
                     }
                 }
             }
