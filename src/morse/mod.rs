@@ -123,17 +123,17 @@ pub enum InputWorkState {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputState {
-    main_key_state: KeyState,
-    lang_key_state: KeyState,
-    change_case_key_state: KeyState,
-    change_lang_key_state: KeyState,
-    pause_key_state: KeyState,
-    exit_key_state: KeyState,
-    last_main_key_press: Option<SystemTime>,
-    sequence: MorseSequence,
-    is_upper_case: bool,
-    lang: Option<String>,
-    work_state: InputWorkState,
+    pub main_key_state: KeyState,
+    pub lang_key_state: KeyState,
+    pub change_case_key_state: KeyState,
+    pub change_lang_key_state: KeyState,
+    pub pause_key_state: KeyState,
+    pub exit_key_state: KeyState,
+    pub last_main_key_press: Option<SystemTime>,
+    pub sequence: MorseSequence,
+    pub is_upper_case: bool,
+    pub lang: Option<String>,
+    pub work_state: InputWorkState,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
