@@ -13,17 +13,51 @@ pub enum MorseKey {
 
 pub type MorseSequence = Vec<MorseKey>;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ConfigKeySerde {
-    pub sequence: String,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConfigLayoutKey {
     pub lower: KeyCode,
     pub upper: Option<KeyCode>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ConfigKey {
+    Code(KeyCode),
+    Layout(ConfigLayoutKey),
+    Sequence(Vec<ConfigLayoutKey>),
+}
+
+impl ConfigLayoutKey {
+    fn apply_case(&self, is_upper_case: bool) -> KeyCode {
+        if is_upper_case {
+            self.upper.unwrap_or(self.lower)
+        } else {
+            self.lower
+        }
+    }
+}
+
+impl ConfigKey {
+    fn apply_case(&self, is_upper_case: bool) -> Vec<KeyCode> {
+        match self {
+            ConfigKey::Code(key) => vec![key.clone()],
+            ConfigKey::Layout(layout) => {
+                vec![layout.apply_case(is_upper_case)]
+            }
+            ConfigKey::Sequence(seq) => {
+                let mut keys: Vec<KeyCode> = Vec::new();
+                for key in seq.iter() {
+                    keys.push(key.apply_case(is_upper_case));
+                }
+                keys
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigSerde {
-    pub langs: HashMap<String, Vec<ConfigKeySerde>>,
-    pub functional: Vec<ConfigKeySerde>,
+    pub langs: HashMap<String, HashMap<String, ConfigKey>>,
+    pub functional: HashMap<String, ConfigKey>,
     pub main: KeyCode,
     pub exit: KeyCode,
     pub pause: KeyCode,
@@ -36,15 +70,10 @@ pub struct ConfigSerde {
 }
 
 #[derive(Debug, Clone)]
-pub struct ConfigKey {
-    pub sequence: MorseSequence,
-    pub lower: KeyCode,
-    pub upper: Option<KeyCode>,
-}
-
-#[derive(Debug, Clone)]
 pub struct Config {
+    /// current lang dependent
     pub langs: HashMap<String, HashMap<MorseSequence, ConfigKey>>,
+    /// current lang independent
     pub functional: HashMap<MorseSequence, ConfigKey>,
     pub main: KeyCode,
     pub exit: KeyCode,
@@ -56,23 +85,16 @@ pub struct Config {
     pub accept_sequence_delay: Duration,
 }
 
-impl TryFrom<ConfigKeySerde> for ConfigKey {
-    type Error = ();
-    fn try_from(value: ConfigKeySerde) -> Result<Self, Self::Error> {
-        let mut sequence = Vec::new();
-        for c in value.sequence.chars() {
-            match c {
-                '.' => sequence.push(MorseKey::Dot),
-                '-' => sequence.push(MorseKey::Dash),
-                _ => return Err(()),
-            }
+fn morse_seq_from_string(s: &str) -> Option<MorseSequence> {
+    let mut sequence = Vec::new();
+    for c in s.chars() {
+        match c {
+            '.' => sequence.push(MorseKey::Dot),
+            '-' => sequence.push(MorseKey::Dash),
+            _ => return None,
         }
-        Ok(ConfigKey {
-            sequence,
-            lower: value.lower,
-            upper: value.upper,
-        })
     }
+    Some(sequence)
 }
 
 impl TryInto<Config> for ConfigSerde {
@@ -82,16 +104,16 @@ impl TryInto<Config> for ConfigSerde {
         let mut langs = HashMap::new();
         for (lang, keys) in self.langs {
             let mut keys_map = HashMap::new();
-            for key_serde in keys {
-                let key: ConfigKey = key_serde.try_into()?;
-                keys_map.insert(key.sequence.clone(), key);
+            for (seq_serde, key) in keys {
+                let seq = morse_seq_from_string(&seq_serde).ok_or(())?;
+                keys_map.insert(seq, key);
             }
             langs.insert(lang, keys_map);
         }
         let mut functional = HashMap::new();
-        for key_serde in self.functional {
-            let key: ConfigKey = key_serde.try_into()?;
-            functional.insert(key.sequence.clone(), key);
+        for (seq_serde, key) in self.functional {
+            let seq = morse_seq_from_string(&seq_serde).ok_or(())?;
+            functional.insert(seq, key);
         }
         Ok(Config {
             langs,
@@ -145,7 +167,7 @@ pub enum SequenceRejectReason {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputEvent {
     MorseKey(MorseKey),
-    SequenceParsed(MorseSequence, KeyCode),
+    SequenceParsed(MorseSequence, Vec<KeyCode>),
     SeqRejected(MorseSequence, SequenceRejectReason),
     /// current lang
     LangChange(String),
@@ -264,40 +286,44 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                     t.elapsed().unwrap() > config.accept_sequence_delay
                         && !state.sequence.is_empty()
                 }) {
-                    match config.langs.get(state.lang.as_ref().unwrap()) {
-                        Some(keys) => {
-                            if let Some(config_key) = keys.get(&state.sequence) {
-                                let curr_config_key = if state.is_upper_case {
-                                    config_key.upper.unwrap_or(config_key.lower)
+                    if let Some(config_key) = config.functional.get(&state.sequence) {
+                        event_handler(
+                            InputEvent::SequenceParsed(
+                                state.sequence.clone(),
+                                config_key.apply_case(state.is_upper_case),
+                            ),
+                            &mut state,
+                        );
+                    } else {
+                        match config.langs.get(state.lang.as_ref().unwrap()) {
+                            Some(keys) => {
+                                if let Some(config_key) = keys.get(&state.sequence) {
+                                    event_handler(
+                                        InputEvent::SequenceParsed(
+                                            state.sequence.clone(),
+                                            config_key.apply_case(state.is_upper_case),
+                                        ),
+                                        &mut state,
+                                    );
                                 } else {
-                                    config_key.lower
-                                };
-
-                                event_handler(
-                                    InputEvent::SequenceParsed(
-                                        state.sequence.clone(),
-                                        curr_config_key,
-                                    ),
-                                    &mut state,
-                                );
-                            } else {
+                                    event_handler(
+                                        InputEvent::SeqRejected(
+                                            state.sequence.clone(),
+                                            SequenceRejectReason::InvalidSequence,
+                                        ),
+                                        &mut state,
+                                    );
+                                }
+                            }
+                            None => {
                                 event_handler(
                                     InputEvent::SeqRejected(
                                         state.sequence.clone(),
-                                        SequenceRejectReason::InvalidSequence,
+                                        SequenceRejectReason::NoLangsLoaded,
                                     ),
                                     &mut state,
                                 );
                             }
-                        }
-                        None => {
-                            event_handler(
-                                InputEvent::SeqRejected(
-                                    state.sequence.clone(),
-                                    SequenceRejectReason::NoLangsLoaded,
-                                ),
-                                &mut state,
-                            );
                         }
                     }
                     state.last_main_key_press = None;
