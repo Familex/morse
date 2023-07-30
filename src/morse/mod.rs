@@ -191,15 +191,14 @@ pub fn listen_loop(config: &Config, event_handler: fn(InputEvent, &mut InputStat
                 // if lang is None, then config not contains any lang
                 if state.lang.is_some() {
                     // cyclically find next lang in config.langs HashMap
-                    state.lang = config
-                        .langs
-                        .keys()
-                        .skip_while(|&s| s != state.lang.as_ref().unwrap())
-                        .cycle()
-                        .next()
-                        .map(|s| s.clone());
-                } else {
-                    state.lang = config.langs.keys().next().map(|s| s.clone());
+                    let curr_lang = state.lang.as_ref().unwrap().clone();
+                    let keys = config.langs.keys().collect::<Vec<_>>();
+                    let curr_lang_iter = keys
+                        .iter()
+                        .position(|s| *s == &curr_lang)
+                        .expect("current lang not found in config.langs");
+                    let next_lang = keys[(curr_lang_iter + 1) % keys.len()].clone();
+                    state.lang = Some(next_lang);
                 }
                 event_handler(InputEvent::LangChange, &mut state);
             }

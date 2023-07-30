@@ -9,6 +9,7 @@ fn main() {
         let config = morse::ConfigSerde {
             langs: {
                 let mut langs = HashMap::new();
+
                 langs.insert("en".to_string(), {
                     let mut en = Vec::new();
                     en.push(morse::ConfigKeySerde {
@@ -23,6 +24,7 @@ fn main() {
                     });
                     en
                 });
+
                 langs.insert("ru".to_string(), {
                     let mut ru = Vec::new();
                     ru.push(morse::ConfigKeySerde {
