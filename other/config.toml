@@ -138,6 +138,31 @@ lower.Layout = "y"
 [langs.en."--..".Layout]
 lower.Layout = "z"
 
+# "emoji" lang
+
+[langs.emoji.".-".Layout]
+lower.Layout = "👍"
+[langs.emoji."-...".Layout]
+lower.Layout = "👎"
+[langs.emoji."-.-.".Layout]
+lower.Layout = "👌"
+[langs.emoji."-..".Layout]
+lower.Layout = "👋"
+[langs.emoji.".".Layout]
+lower.Layout = "👏"
+[langs.emoji."..-.".Layout]
+lower.Layout = "👊"
+[langs.emoji."--.".Layout]
+lower.Layout = "👆"
+[langs.emoji."....".Layout]
+lower.Layout = "👇"
+[langs.emoji."..".Layout]
+lower.Layout = "👈"
+[langs.emoji.".---".Layout]
+lower.Layout = "👉"
+[langs.emoji."-.-".Layout]
+lower.Layout = "😈"
+
 # "functional"
 
 [functional."-.---"]
